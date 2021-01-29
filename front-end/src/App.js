@@ -31,13 +31,13 @@ function App() {
           <Route path="/" component={() => (
             <div className="App">
               <h1>Desafio Geomais Front-end</h1>
-              <Row gutter={16}>
-                <Col span={12}>
+              <Row gutter={14} span={24}>
+                <Col span={8} offset={3}>
                   <Card title={<Link to='/CreatePerson' > Cadastrar Pessoas </Link>} bordered={false}>
                     Forms para adicionar pessoas ao banco de dados.
                     </Card>
                 </Col>
-                <Col span={12}>
+                <Col span={8} offset={2}>
                   <Card title={<Link to='/ListPersons' > Listar Pessoas </Link>} bordered={false}>
                     Tela para listar, buscar, deletar e editar pessoas do banco de dados.
                   </Card>

@@ -89,7 +89,7 @@ export default function Configurations() {
                 <h1 style={{ textAlign: "center" }}>Lista de Pessoas</h1>
                 <h2>Buscar Por:</h2>
                 <Input addonBefore={selectBefore} addonAfter={buttonAfter}></Input>
-                <h3>{numPessoas(persons)} Pessoas enconstradas.</h3>
+                <h3>{numPessoas(persons)} Pessoas encontradas.</h3>
                 <Table columns={columns} dataSource={persons} />
             </Col>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Input, Form, Col, Modal, DatePicker, Select } from 'antd';
 import { SaveFilled } from '@ant-design/icons'
 import moment from 'moment';
@@ -18,9 +18,9 @@ export default function Configurations() {
         "sexo": false,
         "safeToRegister": true
     }
+    const [safePayload, setSafePayload] = useState(payloadInfo)
     const [persons, setPersons] = useState();
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [safePayload, setSafePayload] = useState(payloadInfo)
     const  [formValue, setFormValue]= useState({
         "nome": "",
         "cpf": "",
@@ -30,10 +30,8 @@ export default function Configurations() {
 
 
     const handleOk = () => {
-
         setIsModalVisible(false);
-        safePayload.nome && safePayload.rg && safePayload.cpf && safePayload.data_nasc && safePayload.sexo && safePayload.safeToRegister ? onFinish(formValue) : void 0 
-        console.log(formValue)
+        safePayload.nome && safePayload.rg && safePayload.cpf && safePayload.data_nasc && safePayload.sexo && safePayload.safeToRegister ? onFinish(formValue) : void 0 ;
     };
 
     const handleCancel = () => {
@@ -52,7 +50,7 @@ export default function Configurations() {
         }, [])
 
 
-    const onFinish = useCallback((values) => {
+    const onFinish = (values) => {
         fetch('http://localhost:5000/pessoas', {
             method: "POST",
             body: JSON.stringify(values),
@@ -60,13 +58,13 @@ export default function Configurations() {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
             },
-        }).then(console.log(values))
-    });
+        }).then("cadastrado:"+console.log(values))
+    };
 
 
     const validateValues = (values) => {
         //validating name values
-        (/^[ a-zA-Z]+$/.test(values.nome)) ? payloadInfo.nome = true : payloadInfo.nome = false;
+        (/^[ a-zA-ZçÇÁáÀàãÃóÓõÕéÉíÍ]+$/.test(values.nome)) ? payloadInfo.nome = true : payloadInfo.nome = false;
 
         //Validating CPF generating rules and parsing to db standard
         validate(values.cpf) ? payloadInfo.cpf = true : payloadInfo.cpf = false;
@@ -79,37 +77,27 @@ export default function Configurations() {
         //converting dates to db standard}
         try {
             var convertedDate = moment(values.data_nasc.format('DD/MM/YYYY'));
-            values.data_nasc = convertedDate._i.toString()
-            //console.log(convertedDate._i.toString());
-            payloadInfo.data_nasc = true
+            values.data_nasc = convertedDate._i.toString();
+            payloadInfo.data_nasc = true;
         } catch {
-            payloadInfo.data_nasc = false
+            payloadInfo.data_nasc = false;
         }
 
         //double-checking gender parameters of the payload
         (values.sexo === "Masculino" || values.sexo === "Feminino") ? payloadInfo.sexo = true : payloadInfo.sexo = false;
 
+        //checking if the person rg and cpf was already registered 
         persons.forEach((element) => {
-            values.rg === element.rg ? payloadInfo.safeToRegister = false : console.log(payloadInfo)
-            values.cpf === element.cpf ? payloadInfo.safeToRegister = false : console.log(payloadInfo)
+            values.rg === element.rg ? payloadInfo.safeToRegister = false : void 0;
+            values.cpf === element.cpf ? payloadInfo.safeToRegister = false : void 0;
         })
-        // Object.entries(payloadInfo).forEach((parameter) => {
-        //     parameter[1] === false ?  : console.log(payloadInfo);
-        // })
-
-        setSafePayload(payloadInfo)
-        showModal(values, payloadInfo)
-        setFormValue(values)
+    
+        setSafePayload(payloadInfo);
+        setIsModalVisible(true);
+        setFormValue(values);
         
 
     }
-
-    const showModal = (values, payloadValidation) => {
-
-        setIsModalVisible(true);
-        console.log(payloadValidation)
-        console.log(values)
-    };
 
     const onFinishFailed = (errorInfo) => {
         console.log('Failed:', errorInfo);
@@ -142,7 +130,7 @@ export default function Configurations() {
                     <Form.Item label="Data de Nascimento"
                         name="data_nasc"
                         rules={[{ required: true, message: 'Por favor selecione a data' }]}>
-                        <DatePicker defaultValue={moment('2015/01/01', 'DD/MM/YYYY')} format={'DD/MM/YYYY'}></DatePicker>
+                        <DatePicker  format={'DD/MM/YYYY'}></DatePicker>
                     </Form.Item>
                     <Form.Item label="Sexo"
                         name="sexo"
@@ -163,7 +151,6 @@ export default function Configurations() {
                     {!safePayload.sexo ? <p>Valor de sexo invalido.</p> : void 0}
                     {!safePayload.safeToRegister ? <p>Pessoa já cadastrada.</p> : void 0}
                     {safePayload.nome && safePayload.rg && safePayload.cpf && safePayload.data_nasc && safePayload.sexo && safePayload.safeToRegister ? <p>Confirmar cadastro?</p>:void 0 }
-
 
                 </Modal>
             </Col>

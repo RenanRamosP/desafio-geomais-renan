@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
 import { Menu, Card, Col, Row } from 'antd'
-import { HomeOutlined, MenuOutlined } from '@ant-design/icons'
+import { MenuOutlined } from '@ant-design/icons'
 import './App.css';
 
 import CreatePerson from './Pages/CreatePerson';

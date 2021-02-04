@@ -9,7 +9,7 @@ const { Option } = Select;
 
 
 export default function Configurations() {
-
+    //states declarations
     var payloadInfo = {
         "nome": false,
         "cpf": false,
@@ -21,24 +21,28 @@ export default function Configurations() {
     const [safePayload, setSafePayload] = useState(payloadInfo)
     const [persons, setPersons] = useState();
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const  [formValue, setFormValue]= useState({
+    const [formValue, setFormValue] = useState({
         "nome": "",
         "cpf": "",
         "rg": "",
         "data_nasc": "",
-        "sexo": ""})
+        "sexo": ""
+    })
 
+    const [form] = Form.useForm();
 
+    //checks the payload flags before posting the new entry and closes the modal 
     const handleOk = () => {
         setIsModalVisible(false);
-        safePayload.nome && safePayload.rg && safePayload.cpf && safePayload.data_nasc && safePayload.sexo && safePayload.safeToRegister ? onFinish(formValue) : void 0 ;
+        safePayload.nome && safePayload.rg && safePayload.cpf && safePayload.data_nasc && safePayload.sexo && safePayload.safeToRegister ? onFinish(formValue) : void 0;
     };
 
+    //closes the modal on cancel button
     const handleCancel = () => {
         setIsModalVisible(false);
     };
 
-
+    //get the list of the registered persons from the db
     useEffect(
         () => {
             fetch('http://localhost:5000/pessoas', {
@@ -49,7 +53,7 @@ export default function Configurations() {
             }).then(resp => resp.json()).then(setPersons)
         }, [])
 
-
+    //post the new person to the db 
     const onFinish = (values) => {
         fetch('http://localhost:5000/pessoas', {
             method: "POST",
@@ -58,7 +62,8 @@ export default function Configurations() {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
             },
-        }).then("cadastrado:"+console.log(values))
+        }).then("cadastrado:" + console.log(values))
+        form.resetFields();
     };
 
 
@@ -91,14 +96,14 @@ export default function Configurations() {
             values.rg === element.rg ? payloadInfo.safeToRegister = false : void 0;
             values.cpf === element.cpf ? payloadInfo.safeToRegister = false : void 0;
         })
-    
+        //opens modal and set the states for the validation and formatting results
         setSafePayload(payloadInfo);
         setIsModalVisible(true);
         setFormValue(values);
-        
+
 
     }
-
+    //in case of forms failure
     const onFinishFailed = (errorInfo) => {
         console.log('Failed:', errorInfo);
     };
@@ -107,7 +112,8 @@ export default function Configurations() {
         <div>
             <Col span={12} offset={6}>
                 <h1 style={{ textAlign: "center" }}>Cadastrar Pessoa</h1>
-                <Form name="basic"
+                <Form form={form}
+                    name="basic"
                     initialValues={{ remember: true }}
                     onFinish={validateValues}
                     onFinishFailed={onFinishFailed}
@@ -130,7 +136,7 @@ export default function Configurations() {
                     <Form.Item label="Data de Nascimento"
                         name="data_nasc"
                         rules={[{ required: true, message: 'Por favor selecione a data' }]}>
-                        <DatePicker  format={'DD/MM/YYYY'}></DatePicker>
+                        <DatePicker format={'DD/MM/YYYY'}></DatePicker>
                     </Form.Item>
                     <Form.Item label="Sexo"
                         name="sexo"
@@ -150,7 +156,7 @@ export default function Configurations() {
                     {!safePayload.data_nasc ? <p>Data de nascimento invalida.</p> : void 0}
                     {!safePayload.sexo ? <p>Valor de sexo invalido.</p> : void 0}
                     {!safePayload.safeToRegister ? <p>Pessoa já cadastrada.</p> : void 0}
-                    {safePayload.nome && safePayload.rg && safePayload.cpf && safePayload.data_nasc && safePayload.sexo && safePayload.safeToRegister ? <p>Confirmar cadastro?</p>:void 0 }
+                    {safePayload.nome && safePayload.rg && safePayload.cpf && safePayload.data_nasc && safePayload.sexo && safePayload.safeToRegister ? <p>Confirmar cadastro?</p> : void 0}
 
                 </Modal>
             </Col>

@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, InputNumber, Popconfirm, Form, Typography, Button, Col, Space, Modal } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
-import Highlighter from 'react-highlight-words';
+import { Col, Modal } from 'antd';
 import { validate } from 'gerador-validador-cpf'
+import EditableTable from '../../components/EditableTable'
 
 export default function Configurations() {
-
+    //define states 
     var payloadInfo = {
         "nome": false,
         "cpf": false,
@@ -32,6 +31,7 @@ export default function Configurations() {
         "sexo": ""
     })
 
+    //get the list of persons from the db and puts in the state
     function refreshPersons() {
         fetch('http://localhost:5000/pessoas', {
             headers: {
@@ -41,6 +41,7 @@ export default function Configurations() {
         }).then(resp => resp.json()).then(setPersons)
     }
 
+    //delete selected person
     function deletePerson(person) {
         fetch("http://localhost:5000/pessoas/" + person.id, {
             method: 'DELETE',
@@ -51,7 +52,7 @@ export default function Configurations() {
             .catch(error => console.log('error', error));
         refreshPersons();
     }
-
+    //push the update of the person on db
     const onFinish = ((values) => {
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
@@ -77,11 +78,11 @@ export default function Configurations() {
         console.log("edited:"+values)
         refreshPersons();
     });
-
+    //calculates the number of the persons currently showing in the table
     const personsCounter = (objPessoas) => {
         var counter = 0;
         try {
-            if (state.searchText !== '') {
+            if (state.searchText !== '' && state.searchText ) {
                 persons.forEach((element) => {
                     return element[state.searchedColumn].toString().toLowerCase().includes(state.searchText.toLowerCase()) ? counter++ : void 0;
                 })
@@ -93,12 +94,12 @@ export default function Configurations() {
             return 0
         }
     }
-
+    //get the data from db for the firts table render
     useEffect(
         () => {
             refreshPersons();
         }, [])
-
+    //switch case in the modal ok button
     const handleOk = () => {
         setIsModalVisible(false);
         if (safePayload.nome && safePayload.rg && safePayload.cpf && safePayload.sexo && safePayload.safeToRegister && safePayload.data_nasc) {
@@ -107,12 +108,12 @@ export default function Configurations() {
             refreshPersons();
         }
     };
-
+    //modal handle from cancel button
     const handleCancel = () => {
         refreshPersons();
         setIsModalVisible(false);
     };
-
+    //function that set state validating values from the forms for db registering
     const validateValues = (values) => {
         //validating name values
         (/^[ a-zA-ZçÇÁáÀàãÃóÓõÕéÉíÍ]+$/.test(values.nome)) ? payloadInfo.nome = true : payloadInfo.nome = false;
@@ -131,6 +132,7 @@ export default function Configurations() {
         //double-checking payload gender parameters  
         (values.sexo === "Masculino" || values.sexo === "Feminino") ? payloadInfo.sexo = true : payloadInfo.sexo = false;
 
+        //checks if person is already registered
         persons.forEach((element) => {
             values.rg === element.rg ? payloadInfo.safeToRegister = false : void 0;
             values.cpf === element.cpf ? payloadInfo.safeToRegister = false : void 0;
@@ -141,75 +143,8 @@ export default function Configurations() {
         setIsModalVisible(true);
     }
 
-    const getColumnSearchProps = dataIndex => ({
-        filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-            <div style={{ padding: 8 }}>
-                <Input
-                    ref={node => {
-                        searchInput = node;
-                    }}
-                    placeholder={`Search ${dataIndex}`}
-                    value={selectedKeys[0]}
-                    onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                    onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
-                    style={{ width: 188, marginBottom: 8, display: 'block' }}
-                />
-                <Space>
-                    <Button
-                        type="primary"
-                        onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
-                        icon={<SearchOutlined />}
-                        size="small"
-                        style={{ width: 90 }}
-                    >
-                        Search
-                  </Button>
-                    <Button onClick={() => handleReset(clearFilters)} size="small" style={{ width: 90 }}>
-                        Reset
-                  </Button>
-                    <Button
-                        type="link"
-                        size="small"
-                        onClick={() => {
-                            confirm({ closeDropdown: false });
-                            setState({
-                                searchText: selectedKeys[0],
-                                searchedColumn: dataIndex,
-                            });
-                        }}
-                    >
-                        Filter
-                  </Button>
-                </Space>
-            </div>
-        ),
-        filterIcon: filtered => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
-        filteredValue: [state.searchText],
-        onFilter: (value, record) => {
-            if (state.searchedColumn === dataIndex) {
-                return record[dataIndex] ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()) : '';
-            } else {
-                return true;
-            }
-        },
-        onFilterDropdownVisibleChange: visible => {
-            if (visible) {
-                setTimeout(() => searchInput, 100);
-            }
-        },
-        render: text =>
-            state.searchedColumn === dataIndex ? (
-                <Highlighter
-                    highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
-                    searchWords={[state.searchText]}
-                    autoEscape
-                    textToHighlight={text ? text.toString() : ''}
-                />
-            ) : (
-                    text
-                ),
-    });
-
+    
+    //set the search state after the filter button was pressed
     const handleSearch = (selectedKeys, confirm, dataIndex) => {
         confirm();
         setState({
@@ -218,203 +153,28 @@ export default function Configurations() {
         });
     };
 
+    //clear search state and clear filter input
     const handleReset = clearFilters => {
         clearFilters();
         setState({ searchText: '' });
     };
 
-    const EditableTable = () => {
 
-        const EditableCell = ({
-            editing,
-            dataIndex,
-            title,
-            inputType,
-            record,
-            index,
-            children,
-            ...restProps
-        }) => {
-            const inputNode = inputType === 'number' ? <InputNumber /> : <Input />;
-            return (
-                <td {...restProps}>
-                    {editing ? (
-                        <Form.Item
-                            name={dataIndex}
-                            style={{
-                                margin: 0,
-                            }}
-                            rules={[
-                                {
-                                    required: true,
-                                    message: `Please Input ${title}!`,
-                                },
-                            ]}
-                        >
-                            {inputNode}
-                        </Form.Item>
-                    ) : (
-                            children
-                        )}
-                </td>
-            );
-        };
-
-        const [editingKey, setEditingKey] = useState('');
-
-        const [form] = Form.useForm();
-
-
-        const edit = (record) => {
-            record.rg = record.rg.replace(/[.-]/g, '')
-            record.cpf = record.cpf.replace(/[.-]/g, '')
-
-            form.setFieldsValue({
-                ...record,
-            });
-            setEditingKey(record.id);
-        };
-
-        const cancel = () => {
-            setEditingKey('');
-        };
-
-        const isEditing = (record) => record.id === editingKey;
-
-        const save = async (key) => {
-            try {
-                var row = await form.validateFields();
-                row = { id: editingKey, ...row }
-                const newData = [...persons];
-                const index = newData.findIndex((item) => key === item.key);
-                if (index > -1) {
-                    const item = newData[index];
-                    newData.splice(index, 1, { ...item, ...row });
-                    setPersons(newData);
-                    setEditingKey('');
-                } else {
-                    newData.push(row);
-                    setPersons(newData);
-                    setEditingKey('');
-                }
-                validateValues(row);
-
-            } catch (errInfo) {
-                console.log('Validate Failed:', errInfo);
-            }
-        };
-
-        const columns = [
-            {
-                title: 'Nome',
-                dataIndex: 'nome',
-                width: '25%',
-                editable: true,
-                ...getColumnSearchProps('nome'),
-            },
-            {
-                title: 'RG',
-                dataIndex: 'rg',
-                width: '14%',
-                editable: true,
-                ...getColumnSearchProps('rg'),
-            },
-            {
-                title: 'CPF',
-                dataIndex: 'cpf',
-                width: '16%',
-                editable: true,
-                ...getColumnSearchProps('cpf'),
-            },
-            {
-                title: 'Data de Nascimento',
-                dataIndex: 'data_nasc',
-                width: '15%',
-                editable: true,
-                ...getColumnSearchProps('data_nasc'),
-            },
-            {
-                title: 'Sexo',
-                dataIndex: 'sexo',
-                width: '10%',
-                editable: true,
-                ...getColumnSearchProps('sexo'),
-            },
-            {
-                title: 'Ações',
-                dataIndex: 'acoes',
-                render: (_, record) => {
-                    const editable = isEditing(record);
-                    return editable ? (
-                        <span>
-                            <Button
-                                onClick={() => save(record.key)}
-                                style={{
-                                    marginRight: 8,
-                                }}
-                            >
-                                Save
-                            </Button>
-                            <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-                                <Button>Cancel</Button>
-                            </Popconfirm>
-                        </span>
-                    ) : (<>
-                        <Typography.Link disabled={editingKey !== ''} onClick={() => edit(record)}>
-                            Editar
-                            </Typography.Link>
-                        <Typography.Link style={{ marginLeft: 15 }} disabled={editingKey !== ''} onClick={() => deletePerson(record)}>
-                            Excluir
-                            </Typography.Link>
-                    </>
-
-
-                        );
-                },
-            },
-        ];
-        const mergedColumns = columns.map((col) => {
-            if (!col.editable) {
-                return col;
-            }
-
-            return {
-                ...col,
-                onCell: (record) => ({
-                    record,
-                    inputType: 'text',
-                    dataIndex: col.dataIndex,
-                    title: col.title,
-                    editing: isEditing(record),
-                }),
-            };
-        });
-        return (
-            <Form form={form} component={false}>
-                <h3>{personsCounter(persons)} Pessoas encontradas.</h3>
-                <Table
-                    components={{
-                        body: {
-                            cell: EditableCell,
-                        },
-                    }}
-                    bordered
-                    dataSource={persons}
-                    columns={mergedColumns}
-                    rowClassName="editable-row"
-                    pagination={{
-                        onChange: cancel,
-                    }}
-                />
-            </Form>
-        );
-    };
 
     return (
         <div>
             <Col span={22} offset={1} >
                 <h1 style={{ textAlign: "center" }}>Lista de Pessoas</h1>
-                <EditableTable />
+                <EditableTable persons={persons} 
+                setPersons={setPersons} 
+                validateValues={validateValues} 
+                deletePerson={deletePerson} 
+                personsCounter={personsCounter} 
+                searchInput={searchInput} 
+                handleSearch={handleSearch} 
+                handleReset={handleReset} 
+                state={state} 
+                setState={setState} />
                 <Modal title="Confirmar Cadastro" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
 
                     {!safePayload.nome ? <p>Nome invalido.</p> : void 0}
